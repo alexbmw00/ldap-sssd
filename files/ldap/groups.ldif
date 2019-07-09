@@ -4,7 +4,7 @@ objectClass: groupOfNames
 objectClass: posixGroup
 cn: admins
 gidNumber: 10000
-member:
+member: uid=linux.admin,ou=users,dc=ldap,dc=example,dc=com
 
 dn: cn=users,ou=groups,dc=ldap,dc=example,dc=com
 objectClass: top
@@ -12,4 +12,4 @@ objectClass: groupOfNames
 objectClass: posixGroup
 cn: users
 gidNumber: 10001
-member:
+member: uid=hector.vido,ou=users,dc=ldap,dc=example,dc=com

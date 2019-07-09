@@ -1,4 +1,4 @@
 dn: cn=users,ou=groups,dc=ldap,dc=example,dc=com
 changetype: modify
 add: member
-member: uid=hector.vido,ou=users,dc=ldap,dc=example,dc=com 
+member: uid=fulano.ciclano,ou=users,dc=ldap,dc=example,dc=com 

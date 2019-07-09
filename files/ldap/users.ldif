@@ -1,3 +1,19 @@
+dn: uid=linux.admin,ou=users,dc=ldap,dc=example,dc=com
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Linux Admin
+uid: linux.admin
+uidNumber: 10000
+gidNumber: 10000
+homeDirectory: /srv/home/linux.admin
+loginShell: /bin/bash
+userPassword: {SSHA}MhndfhVccrnp3Ynam7WhQOp3Eoy/f1YT
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
 dn: uid=hector.vido,ou=users,dc=ldap,dc=example,dc=com
 objectClass: top
 objectClass: account
@@ -7,9 +23,25 @@ cn: Hector
 uid: hector.vido
 uidNumber: 10001
 gidNumber: 10001
-homeDirectory: /srv/home/hector
+homeDirectory: /srv/home/hector.vido
 loginShell: /bin/bash
 userPassword: {SSHA}T9+m42tBydKkjMPH+X9NrQxY9pzxXcQC
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0
+
+dn: uid=fulano.ciclano,ou=users,dc=ldap,dc=example,dc=com
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Fulano Ciclano
+uid: fulano.ciclano
+uidNumber: 10002
+gidNumber: 10001
+homeDirectory: /srv/home/fulano.ciclano
+loginShell: /bin/bash
+userPassword: {SSHA}NM0Y0NPj5uus1qbGVFPWuxOx1iDwgYZX
 shadowLastChange: 0
 shadowMax: 0
 shadowWarning: 0
