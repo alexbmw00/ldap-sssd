@@ -15,6 +15,7 @@ Vagrant.configure("2") do |config|
       deb.vm.hostname="debian"
       deb.vm.box = "debian/stretch64"
       deb.vm.network "private_network", ip: "192.168.99.20"
+      # apt-get install sssd libpam-sss libnss-sss
     end
 
     config.vm.define "centos" do |centos|

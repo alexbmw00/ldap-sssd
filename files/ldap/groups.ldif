@@ -1,0 +1,15 @@
+dn: cn=admins,ou=groups,dc=ldap,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+objectClass: posixGroup
+cn: admins
+gidNumber: 10000
+member:
+
+dn: cn=users,ou=groups,dc=ldap,dc=example,dc=com
+objectClass: top
+objectClass: groupOfNames
+objectClass: posixGroup
+cn: users
+gidNumber: 10001
+member:

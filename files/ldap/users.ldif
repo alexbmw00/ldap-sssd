@@ -1,0 +1,15 @@
+dn: uid=hector.vido,ou=users,dc=ldap,dc=example,dc=com
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Hector
+uid: hector.vido
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /srv/home/hector
+loginShell: /bin/bash
+userPassword: {SSHA}T9+m42tBydKkjMPH+X9NrQxY9pzxXcQC
+shadowLastChange: 0
+shadowMax: 0
+shadowWarning: 0

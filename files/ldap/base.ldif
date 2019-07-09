@@ -1,0 +1,17 @@
+dn: dc=ldap,dc=example,dc=com
+dc: ldap
+o: Lightweight Directory Access Protocol
+objectclass: organization
+objectclass: dcObject
+
+dn: ou=users,dc=ldap,dc=example,dc=com
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=administrators,dc=ldap,dc=example,dc=com
+objectClass: organizationalUnit
+ou: administrators
+
+dn: ou=groups,dc=ldap,dc=example,dc=com
+objectClass: organizationalUnit
+ou: groups
