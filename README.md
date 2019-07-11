@@ -145,7 +145,6 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
@@ -233,7 +232,6 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
@@ -337,7 +335,6 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
