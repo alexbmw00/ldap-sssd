@@ -22,12 +22,57 @@ Caso não utilize DNS:
 echo '27.11.90.10 ldap.example.com' >> /etc/hosts
 ```
 
+#### Criando somente o certificado
+
 Crie um certificado TLS pois é considerado uma obrigatoriedade pelo SSSD:
 
 ```
 mkdir -p /etc/openldap/tls/
 openssl req -x509 -newkey rsa:4096 -nodes -keyout /etc/openldap/tls/key.pem -out /etc/openldap/tls/cert.pem -days 365
 chown -R ldap: /etc/openldap/tls
+```
+
+#### Criando uma CA
+
+```
+mkdir -p /usr/share/ca/{certs,newcerts,private,crl}
+echo 01 > serial
+> index.txt
+
+cd /usr/share/ca/
+openssl req -config /etc/ssl/openssl.cnf -new -x509 -extensions v3_ca -keyout private/ca.key -out ca.cert -days 3650
+...
+Enter PEM pass phrase: 1234
+Verifying - Enter PEM pass phrase: 1234
+...
+Country Name (2 letter code) [AU]:BR
+State or Province Name (full name) [Some-State]:São Paulo
+Locality Name (eg, city) []:Osasco
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Ldap Example Ltd 
+Organizational Unit Name (eg, section) []:TI
+Common Name (e.g. server FQDN or YOUR name) []:ldap.example.com
+Email Address []:
+
+chmod 0400 private/ca.key
+
+mkdir -p /etc/openldap/tls/
+openssl req -config /etc/ssl/openssl.cnf -newkey rsa:2048 -sha256 -nodes -out /etc/openldap/tls/ldap_cert.csr -outform PEM -keyout /etc/openldap/tls/ldap_key.pem
+Country Name (2 letter code) [AU]:BR
+State or Province Name (full name) [Some-State]:São Paulo
+Locality Name (eg, city) []:São Paulo
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Ldap Example Ltd
+Organizational Unit Name (eg, section) []:TI
+Common Name (e.g. server FQDN or YOUR name) []:ldap.example.com
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+
+openssl ca -config /etc/ssl/openssl.cnf -policy signing_policy -extensions signing_req -out /etc/openldap/tls/ldap_cert.pem -infiles /etc/openldap/tls/ldap_cert.csr
+cp ca.cert /etc/openldap/tls/
+chown -R ldap: /etc/openldap/
 ```
 
 Modifique o arquivo **/etc/openldap/slapd.conf** para configurar os parâmetros iniciais do OpenLDAP:
@@ -89,7 +134,16 @@ No such object (32)
 
 #### Verificar conexão TLS com STARTTLS:
 
-Podemos ignorar o certificado auto-assinado no openSUSE criado o arquivo de parâmetros padrões do ldap:
+Caso seja utilizado um certificado auto-assinado, você tem três opções:
+
+Copiar a CA para a máquina:
+
+```
+opensuse:~ # cp ca.cert /usr/share/pki/trust/anchors/
+opensuse:~ # update-ca-certificates -v
+```
+
+Alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
 
 ```
 opensuse:~ # echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
@@ -145,12 +199,24 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
 ldap_user_search_base = ou=users,dc=ldap,dc=example,dc=com
+Caso seja utilizado um certificado auto-assinado, você tem duas opções:
 
+Copiar a CA para a máquina:
+
+```
+cp ca.cert /usr/share/pki/trust/anchors/
+update-ca-certificates -v
+```
+
+Ignorar o certificado auto-assinado alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
+
+```
+[root@centos ~]# echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
+```
 ldap_uri = ldap://ldap.example.com
 ```
 
@@ -189,7 +255,7 @@ ssh hector.vido@127.0.0.1
 Instale os pacotes necessários para a configuração do SSSD:
 
 ```
-apt-get install sssd libpam-sss libnss-sss 
+apt-get install sssd libpam-sss libnss-sss vim ldap-utils
 ```
 
 Caso não utilize DNS:
@@ -233,7 +299,6 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
@@ -266,10 +331,19 @@ Reconfigure o PAM para garantir que tudo esteja correto:
 pam-auth-update
 ```
 
-Caso seja utilizado um certificado auto-assinado, será preciso adicionar o seguinte parâmetro arquivo do client do OpenLDAP em **/etc/ldap/ldap.conf**:
+Caso seja utilizado um certificado auto-assinado, você tem duas opções:
+
+Copiar a CA para a máquina:
 
 ```
-TLS_REQCERT     never
+vim /usr/local/share/ca-certificates/ldap.crt
+update-ca-certificates -v
+```
+
+Alterando o arquivo de parâmetros padrões do client ldap **/etc/ldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
+
+```
+root@debian:~# echo -e 'TLS_REQCERT\tnever' >> /etc/ldap/ldap.conf
 ```
 
 Verifique se o Debian consegue encontrar os usuários e grupos através do comando **getent**:
@@ -293,7 +367,7 @@ ssh hector.vido@127.0.0.1
 Instale os pacotes necessários para a configuração do SSSD:
 
 ```
-yum install -y sssd vim
+yum install -y sssd vim openldap-clients
 ```
 
 Caso não utilize DNS:
@@ -337,7 +411,6 @@ ldap_schema = rfc2307
 id_provider = ldap 
 enumerate = true 
 cache_credentials = true
-offline_credentials_expiration = 3
 # Necessário para autoassinados
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
@@ -359,7 +432,16 @@ Configure o PAM para utilizar SSS e criar a home dos usuários que se logarem:
 authconfig --enablesssd --enablesssdauth --enablelocauthorize --enablemkhomedir --update
 ```
 
-Ignore o certificado auto-assinado no CentOS alterando o arquivo de parâmetros padrões do client ldap - isto é necessário por conta do PAM e do SSSD:
+Caso seja utilizado um certificado auto-assinado, você tem duas opções:
+
+Copiar a CA para a máquina:
+
+```
+vim /usr/share/pki/ca-trust-source/anchors/ldap.pem
+update-ca-trust -v
+```
+
+Alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
 
 ```
 [root@centos ~]# echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
