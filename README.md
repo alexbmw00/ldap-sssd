@@ -106,7 +106,7 @@ Caso seja utilizado um certificado auto-assinado, você tem três opções:
 Copiar e importar a CA - gerada no exemplo **ca.md** - para a máquina:
 
 ```
-cp ldap.example.com-cert.pem /usr/share/pki/trust/anchors/
+cp ca-chain-cert.pem /usr/share/pki/trust/anchors/
 update-ca-certificates -v
 ```
 
@@ -296,7 +296,7 @@ Caso seja utilizado um certificado auto-assinado você tem as mesmas opções do
 
 
 ```
-cp ldap.example.com-cert.pem /usr/local/share/ca-certificates/ldap.example.com-cert.crt
+cp ca-chain-cert.pem /usr/local/share/ca-certificates/ca-chain-cert.crt
 update-ca-certificates -v
 ```
 
@@ -390,7 +390,7 @@ Caso seja utilizado um certificado auto-assinado você tem as mesmas opções do
 
 
 ```
-cp ldap.example.com-cert.pem /usr/share/pki/ca-trust-source/anchors/ldap.example.com-cert.pem
+cp ca-chain-cert.pem /usr/share/pki/ca-trust-source/anchors/ca-chain-cert.pem
 update-ca-trust -v
 ```
 

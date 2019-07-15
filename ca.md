@@ -185,25 +185,25 @@ openssl verify -CAfile intermediate/certs/ca-chain-cert.pem intermediate/certs/l
 
 ### Copiando a CA
 
-Uma vez que nossa CA esteja funcionando perfeitamente, precisamos copiar o arquivo **intermediate/certs/ldap.example.com-cert.pem** para as máquinas desejadas:
+Uma vez que nossa CA esteja funcionando perfeitamente, precisamos copiar o arquivo **/root/ca/intermediate/certs/ca-chain-cert.pem** para as máquinas desejadas:
 
 #### openSUSE
 
 ```
-cp ldap.example.com-cert.pem /usr/share/pki/trust/anchors/
+cp ca-chain-cert.pem /usr/share/pki/trust/anchors/ca-chain-cert.pem
 update-ca-certificates -v
 ```
 
 #### Debian
 
 ```
-cp ldap.example.com-cert.pem /usr/local/share/ca-certificates/ldap.crt
+cp ca-chain-cert.pem /usr/local/share/ca-certificates/ca-chain-cert.crt
 update-ca-certificates -v
 ```
 
 #### CentOS
 
 ```
-cp ldap.example.com-cert.pem /usr/share/pki/ca-trust-source/anchors/ldap.pem
+cp ca-chain-cert.pem /usr/share/pki/ca-trust-source/anchors/ca-chain-cert.pem
 update-ca-trust -v
 ```
