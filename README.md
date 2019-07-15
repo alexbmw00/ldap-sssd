@@ -22,9 +22,13 @@ Caso não utilize DNS:
 echo '27.11.90.10 ldap.example.com' >> /etc/hosts
 ```
 
-#### Criando somente o certificado
+### TLS
 
-Crie um certificado TLS pois é considerado uma obrigatoriedade pelo SSSD:
+Certificados TLS/SSL são obrigatórios para o funcionamento do SSSD, pois a conexão com o LDAP acontece apenas de forma segura. Você pode criar um simples certificado para testes ou uma CA inteira caso precise deste tipo de exemplo:
+
+#### Certificado Simples
+
+Neste caso apenas os comandos abaixo são necessários:
 
 ```
 mkdir -p /etc/openldap/tls/
@@ -34,46 +38,9 @@ chown -R ldap: /etc/openldap/tls
 
 #### Criando uma CA
 
-```
-mkdir -p /usr/share/ca/{certs,newcerts,private,crl}
-echo 01 > serial
-> index.txt
+Criar uma CA é um processo relativamente trabalhoso, caso deseje você pode seguir os exemplos no arquivo **ca.md** deste repositório.
 
-cd /usr/share/ca/
-openssl req -config /etc/ssl/openssl.cnf -new -x509 -extensions v3_ca -keyout private/ca.key -out ca.cert -days 3650
-...
-Enter PEM pass phrase: 1234
-Verifying - Enter PEM pass phrase: 1234
-...
-Country Name (2 letter code) [AU]:BR
-State or Province Name (full name) [Some-State]:São Paulo
-Locality Name (eg, city) []:Osasco
-Organization Name (eg, company) [Internet Widgits Pty Ltd]:Ldap Example Ltd 
-Organizational Unit Name (eg, section) []:TI
-Common Name (e.g. server FQDN or YOUR name) []:ldap.example.com
-Email Address []:
-
-chmod 0400 private/ca.key
-
-mkdir -p /etc/openldap/tls/
-openssl req -config /etc/ssl/openssl.cnf -newkey rsa:2048 -sha256 -nodes -out /etc/openldap/tls/ldap_cert.csr -outform PEM -keyout /etc/openldap/tls/ldap_key.pem
-Country Name (2 letter code) [AU]:BR
-State or Province Name (full name) [Some-State]:São Paulo
-Locality Name (eg, city) []:São Paulo
-Organization Name (eg, company) [Internet Widgits Pty Ltd]:Ldap Example Ltd
-Organizational Unit Name (eg, section) []:TI
-Common Name (e.g. server FQDN or YOUR name) []:ldap.example.com
-Email Address []:
-
-Please enter the following 'extra' attributes
-to be sent with your certificate request
-A challenge password []:
-An optional company name []:
-
-openssl ca -config /etc/ssl/openssl.cnf -policy signing_policy -extensions signing_req -out /etc/openldap/tls/ldap_cert.pem -infiles /etc/openldap/tls/ldap_cert.csr
-cp ca.cert /etc/openldap/tls/
-chown -R ldap: /etc/openldap/
-```
+#### OpenLDAP
 
 Modifique o arquivo **/etc/openldap/slapd.conf** para configurar os parâmetros iniciais do OpenLDAP:
 
@@ -136,27 +103,27 @@ No such object (32)
 
 Caso seja utilizado um certificado auto-assinado, você tem três opções:
 
-Copiar a CA para a máquina:
+Copiar e importar a CA - gerada no exemplo **ca.md** - para a máquina:
 
 ```
-opensuse:~ # cp ca.cert /usr/share/pki/trust/anchors/
-opensuse:~ # update-ca-certificates -v
+cp ldap.example.com-cert.pem /usr/share/pki/trust/anchors/
+update-ca-certificates -v
 ```
 
-Alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
+Alterar o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
 
 ```
-opensuse:~ # echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
-opensuse:~ # ldapsearch -h localhost -D 'cn=admin,dc=ldap,dc=example,dc=com' -w 123 -LLL -ZZ
-No such object (32)
+echo -e 'TLS_REQCERT\tnever' > /etc/openldLDAPTLS_REQCERT=neverap/ldap.conf
 ```
 
 Ou sempre especificar a variável **LDAPTLS_REQCERT=never** antes do comando:
 
 ```
-opensuse:~ # LDAPTLS_REQCERT=never ldapsearch -h localhost -D 'cn=admin,dc=ldap,dc=example,dc=com' -w 123 -LLL -ZZ
+LDAPTLS_REQCERT=never ldapsearch -h localhost -D 'cn=admin,dc=ldap,dc=example,dc=com' -w 123 -LLL -ZZ
 No such object (32)
 ```
+
+Em ambos os casos procuramos a saída *No such object (32)*. Apensar do susto, isso é um sucesso, pois não tivemos problemas em fechar a conexão TLS.
 
 #### Popular o OpenLDAP:
 
@@ -203,21 +170,15 @@ cache_credentials = true
 ldap_tls_reqcert = never
 # Opcional para limitar a base de busca
 ldap_user_search_base = ou=users,dc=ldap,dc=example,dc=com
-Caso seja utilizado um certificado auto-assinado, você tem duas opções:
 
-Copiar a CA para a máquina:
-
-```
-cp ca.cert /usr/share/pki/trust/anchors/
-update-ca-certificates -v
-```
-
-Ignorar o certificado auto-assinado alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
-
-```
-[root@centos ~]# echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
-```
 ldap_uri = ldap://ldap.example.com
+
+```
+
+Reinicie o sssd:
+
+```
+systemctl restart sssd
 ```
 
 Verifique se no arquivo **/etc/nsswitch.conf** ao menos passwd, group e shadow utilizem **sss**:
@@ -331,19 +292,12 @@ Reconfigure o PAM para garantir que tudo esteja correto:
 pam-auth-update
 ```
 
-Caso seja utilizado um certificado auto-assinado, você tem duas opções:
+Caso seja utilizado um certificado auto-assinado você tem as mesmas opções do openSUSE, mas neste caso vou demonstrar apenas a adição da cadeia da CA, pois é o método que mais se diferencia:
 
-Copiar a CA para a máquina:
 
 ```
-vim /usr/local/share/ca-certificates/ldap.crt
+cp ldap.example.com-cert.pem /usr/local/share/ca-certificates/ldap.example.com-cert.crt
 update-ca-certificates -v
-```
-
-Alterando o arquivo de parâmetros padrões do client ldap **/etc/ldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
-
-```
-root@debian:~# echo -e 'TLS_REQCERT\tnever' >> /etc/ldap/ldap.conf
 ```
 
 Verifique se o Debian consegue encontrar os usuários e grupos através do comando **getent**:
@@ -432,19 +386,12 @@ Configure o PAM para utilizar SSS e criar a home dos usuários que se logarem:
 authconfig --enablesssd --enablesssdauth --enablelocauthorize --enablemkhomedir --update
 ```
 
-Caso seja utilizado um certificado auto-assinado, você tem duas opções:
+Caso seja utilizado um certificado auto-assinado você tem as mesmas opções do openSUSE, mas neste caso vou demonstrar apenas a adição da cadeia da CA, pois é o método que mais se diferencia:
 
-Copiar a CA para a máquina:
 
 ```
-vim /usr/share/pki/ca-trust-source/anchors/ldap.pem
+cp ldap.example.com-cert.pem /usr/share/pki/ca-trust-source/anchors/ldap.example.com-cert.pem
 update-ca-trust -v
-```
-
-Alterando o arquivo de parâmetros padrões do client ldap **/etc/openldap/ldap.conf** - isto é necessário por conta do PAM e do SSSD:
-
-```
-[root@centos ~]# echo -e 'TLS_REQCERT\tnever' > /etc/openldap/ldap.conf
 ```
 
 Verifique se o CentOS consegue encontrar os usuários e grupos através do comando **getent**:
